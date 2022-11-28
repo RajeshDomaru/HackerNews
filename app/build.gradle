@@ -60,7 +60,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
     // define a BOM and its version
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.9.3"))
+    implementation(platform('com.squareup.okhttp3:okhttp-bom:4.9.3'))
     // define any required OkHttp artifacts without version
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.squareup.okhttp3:logging-interceptor'
@@ -82,7 +82,14 @@ dependencies {
     implementation 'androidx.room:room-runtime:2.4.3'
     kapt 'androidx.room:room-compiler:2.4.3'
 
+    // Paging
+    implementation "androidx.paging:paging-runtime-ktx:3.1.1"
+    implementation 'androidx.room:room-paging:2.4.3'
+
     // Kotlin extensions and coroutines support for Room
     implementation 'androidx.room:room-ktx:2.4.3'
+
+    // Swipe Refresh Layout
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
 }

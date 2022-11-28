@@ -2,7 +2,7 @@ package com.hackernews.data.api.dto
 
 import com.hackernews.data.cache.entities.StoryEntity
 
-data class ArticleResponse(
+data class ArticleResponseDto(
     val id: Int?,
     val `by`: String?,
     val descendants: Int?,
@@ -19,10 +19,11 @@ data class ArticleResponse(
             id = id ?: 0,
             by = by ?: "",
             descendants = descendants ?: 0,
-            kids = kids?.filterNotNull() ?: listOf(),
+            kids = kids?.toString() ?: "",
             score = score ?: 0,
             time = time ?: 0,
-            title = type ?: "",
+            title = title ?: "",
+            type = type ?: "",
             url = url ?: ""
         )
     }

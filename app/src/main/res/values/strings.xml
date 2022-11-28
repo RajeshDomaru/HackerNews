@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">HackerNews</string>
+    <string name="app_name">Hacker News</string>
     <string name="something_went_wrong">Something went wrong!</string>
+    <string name="stories_not_found">Stories not found!</string>
+    <string name="no_internet">No internet!</string>
+    <string name="retry">Retry</string>
 </resources>

@@ -1,20 +1,20 @@
 package com.hackernews.data.cache.entities
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "story_tbl")
 data class StoryEntity(
     @PrimaryKey
     var id: Int = 0,
-    var `by`: String = "",
+    var `by`: String? = null,
     var descendants: Int = 0,
-    @Ignore
-    var kids: List<Int> = listOf(),
+    var kids: String? = null,
     var score: Int = 0,
     var time: Int = 0,
-    var title: String = "",
-    var type: String = "",
-    var url: String = ""
+    var title: String? = null,
+    var type: String? = null,
+    var url: String? = null,
+    var isUpdated: Boolean = false,
+    var isSeen: Boolean = false
 )

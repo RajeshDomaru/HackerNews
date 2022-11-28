@@ -1,53 +1,112 @@
 package com.hackernews.ui
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.paging.*
+import com.hackernews.R
+import com.hackernews.data.api.ApiResponse
 import com.hackernews.data.api.interceptors.InternetService
 import com.hackernews.data.api.repositories.StoriesRemoteRepositoryImpl
+import com.hackernews.data.cache.entities.StoryEntity
 import com.hackernews.data.cache.repositories.StoriesLocalRepositoryImpl
+import com.hackernews.util.UiText
+import com.hackernews.util.events.StoriesEvent
+import com.hackernews.util.events.UiEvent
 import com.hackernews.util.states.StoriesViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
     private val storiesRemoteRepositoryImpl: StoriesRemoteRepositoryImpl,
-    storiesLocalRepositoryImpl: StoriesLocalRepositoryImpl
+    private val storiesLocalRepositoryImpl: StoriesLocalRepositoryImpl
 ) : ViewModel() {
 
     private val _viewState: MutableStateFlow<StoriesViewState> =
-        MutableStateFlow(StoriesViewState.Init)
+        MutableStateFlow(StoriesViewState.None)
     val viewState get() = _viewState.asStateFlow()
 
-    private val _getAllStories = storiesLocalRepositoryImpl.getAllStories()
-    val getAllStories get() = _getAllStories.asLiveData()
+    private val _uiEvent: Channel<UiEvent> = Channel()
+    val uiEvent get() = _uiEvent.receiveAsFlow()
+
+    @ExperimentalPagingApi
+    fun getStories(): Flow<PagingData<StoryEntity>> = Pager(
+        config = PagingConfig(100),
+        pagingSourceFactory = { storiesLocalRepositoryImpl.getAllStories() },
+    ).flow.cachedIn(viewModelScope)
 
     init {
         loadTopStories()
     }
 
-    private fun loadTopStories() {
+    fun loadTopStories() {
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
 
             _viewState.update { StoriesViewState.Loading }
 
             if (InternetService.instance.isOnline()) {
 
-                val response = withContext(Dispatchers.IO) {
-                    storiesRemoteRepositoryImpl.onStoriesResponse()
+                when (val storiesEvent = storiesRemoteRepositoryImpl.onStoriesResponse()) {
+
+                    is StoriesEvent.EmptyData -> {
+
+                        _viewState.update { StoriesViewState.None }
+
+                        _uiEvent.send(
+                            UiEvent.SnackBarEvent(UiText.StringResource(R.string.stories_not_found))
+                        )
+
+                    }
+
+                    is StoriesEvent.Error -> {
+
+                        _viewState.update { StoriesViewState.None }
+
+                        _uiEvent.send(UiEvent.SnackBarEvent(storiesEvent.uiText))
+
+                    }
+
+                    is StoriesEvent.Success -> {
+
+                        // Clearing old local articles before inserting new articles
+                        storiesLocalRepositoryImpl.clearAll()
+
+                        // Fetching article data from remote and inserting into local Database
+                        storiesEvent.articlesIds.sorted().forEach { articlesId ->
+
+                            when (val articleResponse =
+                                storiesRemoteRepositoryImpl.onArticleResponse(articlesId)) {
+                                is ApiResponse.EmptyData -> {}
+                                is ApiResponse.Failure -> {}
+                                is ApiResponse.Success -> {
+                                    articleResponse.data?.let { notNullArticleResponse ->
+                                        storiesLocalRepositoryImpl.saveStory(
+                                            notNullArticleResponse.toStoryEntity()
+                                        )
+                                    }
+                                }
+                            }
+
+                        }
+
+                        _viewState.update { StoriesViewState.Success }
+
+                    }
+
                 }
 
-                if (!response.first) {
-                    _viewState.update { StoriesViewState.Error(response.second) }
-                }
+            } else {
+
+                _viewState.update { StoriesViewState.Success }
+
+                _uiEvent.send(
+                    UiEvent.SnackBarEvent(UiText.StringResource(R.string.no_internet))
+                )
 
             }
 

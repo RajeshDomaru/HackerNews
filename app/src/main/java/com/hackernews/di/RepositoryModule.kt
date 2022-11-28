@@ -18,8 +18,8 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun providesStoryRemoteRepository(apiServices: ApiServices, hackerNewsDB: HackerNewsDB):
-            OnStoriesRemoteRepository = StoriesRemoteRepositoryImpl(apiServices, hackerNewsDB)
+    fun providesStoryRemoteRepository(apiServices: ApiServices):
+            OnStoriesRemoteRepository = StoriesRemoteRepositoryImpl(apiServices)
 
     @Provides
     @Singleton
