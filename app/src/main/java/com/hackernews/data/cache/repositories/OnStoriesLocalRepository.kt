@@ -11,6 +11,8 @@ interface OnStoriesLocalRepository {
 
     fun getAllStories(): PagingSource<Int, StoryEntity>
 
+    fun getSearchStories(searchString: String): PagingSource<Int, StoryEntity>
+
     suspend fun clearAll()
 
 }
@@ -24,6 +26,9 @@ class StoriesLocalRepositoryImpl @Inject constructor(
 
     override fun getAllStories(): PagingSource<Int, StoryEntity> =
         hackerNewsDB.storyDao.getAllStories()
+
+    override fun getSearchStories(searchString: String): PagingSource<Int, StoryEntity> =
+        hackerNewsDB.storyDao.getSearchStories(searchString)
 
     override suspend fun clearAll() =
         hackerNewsDB.storyDao.clearAll()

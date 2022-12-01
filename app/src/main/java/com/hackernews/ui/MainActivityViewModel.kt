@@ -1,22 +1,30 @@
 package com.hackernews.ui
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
-import androidx.paging.*
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.liveData
 import com.hackernews.R
 import com.hackernews.data.api.ApiResponse
 import com.hackernews.data.api.interceptors.InternetService
 import com.hackernews.data.api.repositories.StoriesRemoteRepositoryImpl
-import com.hackernews.data.cache.entities.StoryEntity
 import com.hackernews.data.cache.repositories.StoriesLocalRepositoryImpl
 import com.hackernews.util.UiText
 import com.hackernews.util.events.StoriesEvent
 import com.hackernews.util.events.UiEvent
+import com.hackernews.util.extensions.isValidString
 import com.hackernews.util.states.StoriesViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,14 +38,23 @@ class MainActivityViewModel @Inject constructor(
         MutableStateFlow(StoriesViewState.None)
     val viewState get() = _viewState.asStateFlow()
 
-    private val _uiEvent: Channel<UiEvent> = Channel()
+    private val _uiEvent = Channel<UiEvent>()
     val uiEvent get() = _uiEvent.receiveAsFlow()
 
+    private val currentQuery = MutableLiveData("")
+
     @ExperimentalPagingApi
-    fun getStories(): Flow<PagingData<StoryEntity>> = Pager(
-        config = PagingConfig(100),
-        pagingSourceFactory = { storiesLocalRepositoryImpl.getAllStories() },
-    ).flow.cachedIn(viewModelScope)
+    val stories = currentQuery.switchMap { searchString ->
+        Pager(config = PagingConfig(100, enablePlaceholders = false)) {
+            if (searchString.isValidString())
+                storiesLocalRepositoryImpl.getSearchStories(searchString)
+            else storiesLocalRepositoryImpl.getAllStories()
+        }.liveData
+    }
+
+    fun searchStories(searchString: String) {
+        currentQuery.value = searchString
+    }
 
     init {
         loadTopStories()

@@ -1,9 +1,12 @@
 package com.hackernews.ui
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -11,10 +14,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.ExperimentalPagingApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import com.hackernews.R
 import com.hackernews.databinding.ActivityMainBinding
 import com.hackernews.util.events.UiEvent
 import com.hackernews.util.states.StoriesViewState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -72,19 +77,11 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            lifecycleScope.launch {
+            mainActivityViewModel.stories.observe(this@MainActivity) { stories ->
 
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                lifecycleScope.launch(Dispatchers.Main) {
 
-                    mainActivityViewModel
-                        .getStories()
-                        .collectLatest { stories ->
-
-                            storiesAdapter.submitData(stories)
-
-                            tvDataNotFound.isVisible = storiesAdapter.itemCount == 0
-
-                        }
+                    storiesAdapter.submitData(stories)
 
                 }
 
@@ -150,7 +147,41 @@ class MainActivity : AppCompatActivity() {
 
             }
 
+            storiesAdapter.addLoadStateListener {
+
+                tvDataNotFound.isVisible = storiesAdapter.itemCount == 0
+
+            }
+
         }
+
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+
+        menuInflater.inflate(R.menu.main_activity_menu, menu)
+
+        val searchItem: MenuItem = menu.findItem(R.id.actionStoriesSearch)
+
+        val searchView: SearchView = searchItem.actionView as SearchView
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+
+            android.widget.SearchView.OnQueryTextListener {
+
+            override fun onQueryTextSubmit(p0: String?): Boolean = false
+
+            override fun onQueryTextChange(searchQuery: String): Boolean {
+
+                mainActivityViewModel.searchStories(searchQuery)
+
+                return false
+
+            }
+
+        })
+
+        return true
 
     }
 

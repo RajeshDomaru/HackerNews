@@ -14,7 +14,5 @@ data class StoryEntity(
     var time: Int = 0,
     var title: String? = null,
     var type: String? = null,
-    var url: String? = null,
-    var isUpdated: Boolean = false,
-    var isSeen: Boolean = false
+    var url: String? = null
 )

@@ -2,12 +2,12 @@ package com.hackernews.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.hackernews.data.cache.entities.StoryEntity
 import com.hackernews.databinding.ItemStoryBinding
+import com.hackernews.util.extensions.validateString
 import javax.inject.Inject
 
 class StoriesAdapter @Inject constructor() :
@@ -22,11 +22,12 @@ class StoriesAdapter @Inject constructor() :
 
                 with(binding) {
 
-                    tvTitle.text = title
+                    tvTitle.text = title.validateString()
+
+                    tvBy.text = by.validateString()
 
                     root.setOnClickListener {
 
-                        Toast.makeText(root.context, "Clicked", Toast.LENGTH_LONG).show()
 
                     }
 
