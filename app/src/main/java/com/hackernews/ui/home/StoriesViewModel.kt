@@ -91,7 +91,7 @@ class StoriesViewModel @Inject constructor(
                         storiesLocalRepositoryImpl.clearAll()
 
                         // Fetching article data from remote and inserting into local Database
-                        storiesEvent.articlesIds.sorted().forEach { articlesId ->
+                        storiesEvent.articlesIds.sortedDescending().forEach { articlesId ->
 
                             when (val articleResponse =
                                 storiesRemoteRepositoryImpl.onArticleResponse(articlesId)) {
