@@ -16,6 +16,9 @@ interface StoryDao {
     @Query("SELECT * FROM story_tbl ORDER BY id DESC")
     fun getAllStories(): PagingSource<Int, StoryEntity>
 
+    @Query("SELECT COUNT(*) AS size FROM story_tbl")
+    fun storySize(): Int
+
     @Query("SELECT * FROM story_tbl WHERE title LIKE '%' || :searchString || '%' OR `by` LIKE '%' || :searchString || '%'")
     fun getSearchStories(searchString: String): PagingSource<Int, StoryEntity>
 

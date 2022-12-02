@@ -204,10 +204,10 @@ menuHost.addMenuProvider(object : MenuProvider {
 
 ``` 
 
-## Refresh option to force fetch stories from remote.
+## Refresh option to force fetch stories from remote by SwipeRefreshLayout.
 ``` StoriesFragment
 srlStories.setOnRefreshListener {
-    storiesViewModel.loadTopStories()
+    storiesViewModel.loadTopStories(true)
 }
 
 ```
@@ -222,6 +222,9 @@ interface StoryDao {
     @Query("SELECT * FROM story_tbl ORDER BY id DESC")
     fun getAllStories(): PagingSource<Int, StoryEntity>
 
+    @Query("SELECT COUNT(*) AS size FROM story_tbl")
+    fun storySize(): Int
+    
     @Query("SELECT * FROM story_tbl WHERE title LIKE '%' || :searchString || '%' OR `by` LIKE '%' || :searchString || '%'")
     fun getSearchStories(searchString: String): PagingSource<Int, StoryEntity>
 
@@ -237,6 +240,4 @@ interface StoryDao {
 ![Search to filter the stories.](https://github.com/RajeshDomaru/HackerNews/blob/master/app/src/main/res/drawable/search.jpg)
 
 ![WebView page](https://github.com/RajeshDomaru/HackerNews/blob/master/app/src/main/res/drawable/web_view.jpg)
-
-![Reference video](https://github.com/RajeshDomaru/HackerNews/blob/master/app/src/main/res/drawable/reference_video.mp4)
 

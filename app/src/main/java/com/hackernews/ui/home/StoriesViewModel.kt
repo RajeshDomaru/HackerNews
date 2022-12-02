@@ -57,58 +57,62 @@ class StoriesViewModel @Inject constructor(
         loadTopStories()
     }
 
-    fun loadTopStories() {
+    fun loadTopStories(isFromSwipeRefresh: Boolean = false) {
 
         viewModelScope.launch(Dispatchers.IO) {
 
-            _viewState.update { StoriesViewState.Loading }
-
             if (InternetService.instance.isOnline()) {
 
-                when (val storiesEvent = storiesRemoteRepositoryImpl.onStoriesResponse()) {
+                if (storiesLocalRepositoryImpl.storySize() <= 0 || isFromSwipeRefresh) {
 
-                    is StoriesEvent.EmptyData -> {
+                    _viewState.update { StoriesViewState.Loading }
 
-                        _viewState.update { StoriesViewState.None }
+                    when (val storiesEvent = storiesRemoteRepositoryImpl.onStoriesResponse()) {
 
-                        _uiEvent.send(
-                            UiEvent.SnackBarEvent(UiText.StringResource(R.string.stories_not_found))
-                        )
+                        is StoriesEvent.EmptyData -> {
 
-                    }
+                            _viewState.update { StoriesViewState.None }
 
-                    is StoriesEvent.Error -> {
-
-                        _viewState.update { StoriesViewState.None }
-
-                        _uiEvent.send(UiEvent.SnackBarEvent(storiesEvent.uiText))
-
-                    }
-
-                    is StoriesEvent.Success -> {
-
-                        // Clearing old local articles before inserting new articles
-                        storiesLocalRepositoryImpl.clearAll()
-
-                        // Fetching article data from remote and inserting into local Database
-                        storiesEvent.articlesIds.sortedDescending().forEach { articlesId ->
-
-                            when (val articleResponse =
-                                storiesRemoteRepositoryImpl.onArticleResponse(articlesId)) {
-                                is ApiResponse.EmptyData -> {}
-                                is ApiResponse.Failure -> {}
-                                is ApiResponse.Success -> {
-                                    articleResponse.data?.let { notNullArticleResponse ->
-                                        storiesLocalRepositoryImpl.saveStory(
-                                            notNullArticleResponse.toStoryEntity()
-                                        )
-                                    }
-                                }
-                            }
+                            _uiEvent.send(
+                                UiEvent.SnackBarEvent(UiText.StringResource(R.string.stories_not_found))
+                            )
 
                         }
 
-                        _viewState.update { StoriesViewState.Success }
+                        is StoriesEvent.Error -> {
+
+                            _viewState.update { StoriesViewState.None }
+
+                            _uiEvent.send(UiEvent.SnackBarEvent(storiesEvent.uiText))
+
+                        }
+
+                        is StoriesEvent.Success -> {
+
+                            // Clearing old local articles before inserting new articles
+                            storiesLocalRepositoryImpl.clearAll()
+
+                            // Fetching article data from remote and inserting into local Database
+                            storiesEvent.articlesIds.sortedDescending().forEach { articlesId ->
+
+                                when (val articleResponse =
+                                    storiesRemoteRepositoryImpl.onArticleResponse(articlesId)) {
+                                    is ApiResponse.EmptyData -> {}
+                                    is ApiResponse.Failure -> {}
+                                    is ApiResponse.Success -> {
+                                        articleResponse.data?.let { notNullArticleResponse ->
+                                            storiesLocalRepositoryImpl.saveStory(
+                                                notNullArticleResponse.toStoryEntity()
+                                            )
+                                        }
+                                    }
+                                }
+
+                            }
+
+                            _viewState.update { StoriesViewState.Success }
+
+                        }
 
                     }
 

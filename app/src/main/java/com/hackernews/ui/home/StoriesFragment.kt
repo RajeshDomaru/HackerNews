@@ -165,7 +165,7 @@ class StoriesFragment : Fragment(R.layout.fragment_stories) {
 
             srlStories.setOnRefreshListener {
 
-                storiesViewModel.loadTopStories()
+                storiesViewModel.loadTopStories(true)
 
             }
 
