@@ -13,7 +13,7 @@ interface StoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveStory(vararg storyEntities: StoryEntity)
 
-    @Query("SELECT * FROM story_tbl")
+    @Query("SELECT * FROM story_tbl ORDER BY id DESC")
     fun getAllStories(): PagingSource<Int, StoryEntity>
 
     @Query("SELECT * FROM story_tbl WHERE title LIKE '%' || :searchString || '%' OR `by` LIKE '%' || :searchString || '%'")
