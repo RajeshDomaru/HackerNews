@@ -1,19 +1,22 @@
-package com.hackernews.ui
+package com.hackernews.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+import com.hackernews.R
+import com.hackernews.data.api.interceptors.InternetService
 import com.hackernews.data.cache.entities.StoryEntity
 import com.hackernews.databinding.ItemStoryBinding
+import com.hackernews.util.extensions.getStringResources
 import com.hackernews.util.extensions.validateString
-import javax.inject.Inject
 
-class StoriesAdapter @Inject constructor() :
+class StoriesAdapter(private val itemClicked: (url: String?, title: String?) -> Unit) :
     PagingDataAdapter<StoryEntity, StoriesAdapter.StoriesViewHolder>(StoriesDiffUtils) {
 
-    class StoriesViewHolder(private val binding: ItemStoryBinding) :
+    inner class StoriesViewHolder(private val binding: ItemStoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(storyEntity: StoryEntity) {
@@ -28,6 +31,12 @@ class StoriesAdapter @Inject constructor() :
 
                     root.setOnClickListener {
 
+                        if (InternetService.instance.isOnline()) itemClicked.invoke(url, title)
+                        else Snackbar.make(
+                            root,
+                            root.context.getStringResources(R.string.no_internet),
+                            Snackbar.LENGTH_LONG
+                        ).show()
 
                     }
 

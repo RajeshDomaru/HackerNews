@@ -1,13 +1,10 @@
-package com.hackernews.ui
+package com.hackernews.ui.home
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.liveData
+import androidx.paging.*
 import com.hackernews.R
 import com.hackernews.data.api.ApiResponse
 import com.hackernews.data.api.interceptors.InternetService
@@ -29,7 +26,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainActivityViewModel @Inject constructor(
+class StoriesViewModel @Inject constructor(
     private val storiesRemoteRepositoryImpl: StoriesRemoteRepositoryImpl,
     private val storiesLocalRepositoryImpl: StoriesLocalRepositoryImpl
 ) : ViewModel() {
@@ -49,7 +46,7 @@ class MainActivityViewModel @Inject constructor(
             if (searchString.isValidString())
                 storiesLocalRepositoryImpl.getSearchStories(searchString)
             else storiesLocalRepositoryImpl.getAllStories()
-        }.liveData
+        }.liveData.cachedIn(viewModelScope)
     }
 
     fun searchStories(searchString: String) {
@@ -94,7 +91,7 @@ class MainActivityViewModel @Inject constructor(
                         storiesLocalRepositoryImpl.clearAll()
 
                         // Fetching article data from remote and inserting into local Database
-                        storiesEvent.articlesIds.sorted().forEach { articlesId ->
+                        storiesEvent.articlesIds.sorted().take(100).forEach { articlesId ->
 
                             when (val articleResponse =
                                 storiesRemoteRepositoryImpl.onArticleResponse(articlesId)) {
